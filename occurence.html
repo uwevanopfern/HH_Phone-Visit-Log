@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Manage occurrencePhoneVisit</title>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+	<script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-messaging.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-functions.js"></script>
+	<script>
+	  // Initialize Firebase
+	  var config = {
+	    apiKey: "AIzaSyB81gNhYUOO0m_6ZQHJ6XzOkN-ZMLv9lGk",
+	    authDomain: "hh-phone-visit-log.firebaseapp.com",
+	    databaseURL: "https://hh-phone-visit-log.firebaseio.com",
+	    projectId: "hh-phone-visit-log",
+	    storageBucket: "hh-phone-visit-log.appspot.com",
+	    messagingSenderId: "464712442656"
+	  };
+	  firebase.initializeApp(config);
+	</script>
+</head>
+
+<body>
+
+	<div class="container">
+        <br>
+        <h1>Enter Occurence</h1> 
+        <div class="row">
+            <div class="col-md-3">
+                <form>
+                	<input type="hidden" id="id_occurrence" class="form-control form-control-sm"><br>
+                    type :<select class="form-control form-control-sm" id="types">
+                        <option class="form-control form-control-sm">Missed Call</option>
+                        <option class="form-control form-control-sm">Missed Visitor</option>
+                    </select>
+                    messageFor : <input type="text" id="messageFor" class="form-control form-control-sm" placeholder="Enter message person"><br>
+                    timeDateOfOccurrence : <input type="date" id="timeDateOfOccurrence" class="form-control form-control-sm"><br>
+                    Select Person :<select class="form-control form-control-sm" id="person">
+                        <option class="form-control form-control-sm"></option>
+                    </select>
+                    message : <textarea id="message" class="form-control form-control-sm" placeholder="Enter message"></textarea><br>
+                    timeDateStampCreation : <input type="date" id="timeDateStampCreation" class="form-control form-control-sm"><br>
+                    timeDateStampModified : <input type="date" id="timeDateStampModified" class="form-control form-control-sm"><br>
+                    <button class="btn btn-default" type="submit" id="submit">Submit</button>
+                    <button id="cancel" class="btn grey darken-1 white-text">Cancel</button>
+                </form>
+            </div>
+            <div class="col-md-9">
+	            <h3>Search bellow</h3>
+	            <form>
+	                <input type="text" id="search" class="form-control" placeholder="Enter by staff"><br>
+	                <button type="button" onclick="SearchFs()" class="btn btn-default">search</button><br><br>
+	                <a href="javascript:location.reload(true)" class="btn btn-success">Refresh this page</a>
+	            </form>
+	            <br>
+	            <table class="table table-striped custab" id="tbl_users_list">
+	                <thead>
+	                    <tr>
+	                        <th>Type</th>
+	                        <th>Staff</th>
+	                        <th>Visitor</th>
+	                        <th>Message</th>
+                            <th>Time Occurrence</th>
+                            <th>Time Creation</th>
+                            <th>Time Modified</th>
+	                        <th class="text-center">Action</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                </tbody>
+	            </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+	
+	var db = firebase.database();
+    var members_ref = db.ref('occurrencePhoneVisit/');
+    var table = $('table tbody');
+
+    function getFormData() {
+
+        var types = $('#types').val();
+        var messageFor = $('#messageFor').val();
+        var timeDateOfOccurrence = $('#timeDateOfOccurrence').val();
+        var person = $('#person').val();
+        var message = $('#message').val();
+        var timeDateStampCreation = $('#timeDateStampCreation').val();
+        var timeDateStampModified = $('#timeDateStampModified').val();
+          
+        return {
+
+            types: types,
+            messageFor: messageFor,
+            timeDateOfOccurrence: timeDateOfOccurrence,
+            person: person,
+            message: message,
+            timeDateStampCreation: timeDateStampCreation,
+            timeDateStampModified: timeDateStampModified,
+        };
+    }
+
+    function addMember(event) {
+
+        event.preventDefault();
+        // var member = getFormData();
+
+
+          
+        // members_ref.push(member);
+        var id_occurrence=members_ref.push().key;
+
+        members_ref.child(id_occurrence).set({
+        	id_occurrence: id_occurrence,
+            types: $('#types').val(),
+            messageFor: $('#messageFor').val(),
+            timeDateOfOccurrence: $('#timeDateOfOccurrence').val(),
+            person: $('#person').val(),
+            message: $('#message').val(),
+            timeDateStampCreation: $('#timeDateStampCreation').val(),
+            timeDateStampModified: $('#timeDateStampModified').val(),
+		});
+        $('form input').val('');
+    }
+
+    function addMemberToDOM(is_update, member, key, row) {
+        var el = 
+            '<tr data-key="' + key + '">' +
+              '<td>' + member.types + '</td>' + 
+              '<td>' + member.messageFor + '</td>' +
+              '<td>' + member.person + '</td>' +
+              '<td>' + member.message + '</td>' +
+              '<td>' + member.timeDateOfOccurrence + '</td>' +
+              '<td>' + member.timeDateStampCreation + '</td>' +
+              '<td>' + member.timeDateStampModified + '</td>' +
+              '<td>' +
+                '<button class="btn btn-sm update">Update</button></br>' +
+                '<button class="btn btn-sm grey darken-1 delete" onclick="deleteItem(#ITEMID,#ITEMNAME)">Delete</button>' +
+              '</td>' +
+            '</tr>';
+          
+        if ( is_update ) {
+            row.after(el);
+            row.remove();
+        } else table.append(el);
+    }
+
+    function updateMember(key, row) {
+
+        var member = getFormData();
+        addMemberToDOM(true, member, key, row);
+          
+        members_ref.child(key).set(member);
+          $('form input').val('');
+          $('#submit')
+            .unbind()
+            .text('Submit')
+            .on('click', addMember);
+            $('#cancel').hide();
+    }
+
+    function getMember() {
+
+        var row = $(this).parents('tr');
+        var key = row.data('key');
+        var member_ref = members_ref.child(key);
+        var submit = $('#submit');
+          
+        member_ref.once('value')
+          .then(function(member) {
+            member = member.val();
+            
+            $('#types').val(member.types);
+            $('#messageFor').val(member.messageFor);
+            $('#person').val(member.person);
+            $('#message').val(member.message); 
+            $('#timeDateOfOccurrence').val(member.timeDateOfOccurrence);
+            $('#timeDateStampModified').val(member.timeDateStampModified); 
+            $('#timeDateStampCreation').val(member.timeDateStampCreation);  
+            submit.text('Update');
+            submit.unbind().on('click', function(e) {
+              e.preventDefault();
+              
+              updateMember(key, row);
+            });
+        });
+      
+      $('#cancel')
+        .unbind()
+        .show()
+        .on('click', function(e) {
+          e.preventDefault();
+          $('form input').val('');
+          $(this).hide();
+          submit.text('Submit');
+          submit.unbind().on('click', addMember);
+        });
+    }
+
+
+    function deleteMember() {
+
+        var row = $(this).parents('tr');
+        var key = row.data('key');
+
+        if (confirm("Do you want to delete")){
+            row.remove();
+            members_ref.child(key).remove();
+        }
+    }
+
+
+    function SearchFs() {
+
+        var search=document.getElementById('search').value;
+        members_ref.on('child_added', (member)=> {
+        var key = member.key;
+        member =member.val();
+        console.log(search);
+        if(member.messageFor.toLowerCase().indexOf(search) != -1){
+            console.log(member);
+            table.empty();
+        addMemberToDOM(false, member, key);
+        }
+
+    });
+    }
+
+
+    function getMembers() { 
+
+        members_ref.on('child_added', function(member) {
+        var key = member.key;
+        member = member.val();
+        
+        addMemberToDOM(false, member, key);
+      });
+    }
+
+
+    function getPerson(){
+
+        var person = db.ref('Person/').once('value').then(function(snapshot) {
+
+            
+
+            snapshot.forEach(userSnapshot => {
+                var firstname = userSnapshot.val().fistName;
+                var lastname = userSnapshot.val().lastName;
+                var UUID = userSnapshot.val().id_Person;
+
+                console.log(UUID +" "+ firstname +" "+ lastname);
+
+                var _options ="";
+
+                 _options +=('<option value="'+ UUID +'">'+ firstname +' '+ lastname +'</option>');
+                $('#person').append(_options);
+            });
+          
+        });
+    }
+
+    function init() {
+        getMembers();
+      
+        $("#submit").on("click", addMember);
+        table.on('click', 'button.update', getMember);
+        table.on('click', 'button.delete', deleteMember);
+
+        getPerson();
+    }
+
+init();
+
+</script>

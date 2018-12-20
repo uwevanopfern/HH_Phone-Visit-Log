@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Receipt</title>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-messaging.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-functions.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyB81gNhYUOO0m_6ZQHJ6XzOkN-ZMLv9lGk",
+        authDomain: "hh-phone-visit-log.firebaseapp.com",
+        databaseURL: "https://hh-phone-visit-log.firebaseio.com",
+        projectId: "hh-phone-visit-log",
+        storageBucket: "hh-phone-visit-log.appspot.com",
+        messagingSenderId: "464712442656"
+      };
+      firebase.initializeApp(config);
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <br>
+        <h1>Enter receipt</h1> 
+        <div class="row">
+            <div class="col-md-3">
+                <form>
+                    <input type="hidden" id="uuid_receipt" class="form-control form-control-sm"><br>
+                    Lot : <input type="text" id="lot" class="form-control form-control-sm" placeholder="Enter Lot"><br>
+                    Name : <input type="text" id="name" class="form-control form-control-sm" placeholder="Enter Name"><br>
+                    Date of payment : <input type="date" id="datePayment" class="form-control form-control-sm"><br>
+                    Select Payment Type :<select class="form-control form-control-sm" id="paymentType">
+                        <option class="form-control form-control-sm">Check</option>
+                        <option class="form-control form-control-sm">Cash</option>
+                        <option class="form-control form-control-sm">MoneyOrder</option>
+                        <option class="form-control form-control-sm">Other</option>
+                    </select>
+                    Rent Money : <input type="text" id="rent" class="form-control form-control-sm" placeholder="Enter rent money"><br>
+                    Water Money : <input type="text" id="water" class="form-control form-control-sm" placeholder="Enter water money"><br>
+                    Storage Money : <input type="text" id="storage" class="form-control form-control-sm" placeholder="Enter storage money"><br>
+                    Other : <input type="text" id="other" class="form-control form-control-sm" placeholder="Enter other money"><br>
+                    <button class="btn btn-default" type="submit" id="submit">Submit</button>
+                    <button id="cancel" class="btn grey darken-1 white-text">Cancel</button>
+                </form>
+            </div>
+            <div class="col-md-9">
+                <h3>Search by name bellow</h3>
+                <form>
+                    <input type="text" id="search" class="form-control" placeholder="Enter by person"><br>
+                    <button type="button" onclick="SearchFs()" class="btn btn-default">search</button><br><br>
+                    <a href="javascript:location.reload(true)" class="btn btn-success">Refresh this page</a>
+                </form>
+                <br>
+                <table class="table table-striped custab" id="tbl_users_list">
+                    <thead>
+                        <tr>
+                            <th>Lot</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Payment Type</th>
+                            <th>Rent</th>
+                            <th>Water</th>
+                            <th>Storage</th>
+                            <th>Other</th>
+                            <th>Total</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+    
+    var db = firebase.database();
+    var members_ref = db.ref('HH_receipt/');
+    var table = $('table tbody');
+
+
+    function getFormData() {
+
+        var lot = $('#lot').val();
+        var name = $('#name').val();
+        var datePayment = $('#datePayment').val();
+        var paymentType = $('#paymentType').val();
+        var rent = $('#rent').val();
+        var water = $('#water').val();
+        var storage = $('#storage').val();
+        var other = $('#other').val();
+        var sum = parseFloat(rent) + parseFloat(water) + parseFloat(storage) + parseFloat(other);
+        var total = sum.toFixed(2);
+          
+        return {
+            lot: lot,
+            name: name,
+            datePayment: datePayment,
+            paymentType: paymentType,
+            rent: rent,
+            water: water,
+            storage: storage,
+            other: other,
+            total:total,
+        };
+    }
+
+    function addMember(event) {
+
+        event.preventDefault();
+
+        
+
+        var lot = $('#lot').val();
+        var name = $('#name').val();
+        var datePayment = $('#datePayment').val();
+        var paymentType = $('#paymentType').val();
+        var rent = $('#rent').val();
+        var water = $('#water').val();
+        var storage = $('#storage').val();
+        var other = $('#other').val();
+        var sum = parseFloat(rent) + parseFloat(water) + parseFloat(storage) + parseFloat(other);
+        var total = sum.toFixed(2);
+
+        var uuid_receipt=members_ref.push().push().key;
+
+        members_ref.child(uuid_receipt).set({
+            uuid_receipt: uuid_receipt,
+            lot: lot,
+            name: name,
+            datePayment: datePayment,
+            paymentType: paymentType,
+            rent: rent,
+            water: water,
+            storage: storage,
+            other: other,
+            total: total,
+        });
+        $('form input').val('');
+    }
+
+    function addMemberToDOM(is_update, member, key, row) {
+        var el = 
+            '<tr data-key="' + key + '">' +
+              '<td>' + member.lot + '</td>' +
+              '<td>' + member.name + '</td>' + 
+              '<td>' + member.datePayment + '</td>' +
+              '<td>' + member.paymentType + '</td>' +
+              '<td>' + member.rent + '</td>' +
+              '<td>' + member.water + '</td>' +
+              '<td>' + member.storage + '</td>' +
+              '<td>' + member.other + '</td>' +
+              '<td>' + member.total + '</td>' +
+              '<td>' +
+                '<button class="btn btn-sm update">Update</button></br>' +
+                '<button class="btn btn-sm grey darken-1 delete" onclick="deleteItem(#ITEMID,#ITEMNAME)">Delete</button>' +
+              '</td>' +
+            '</tr>';
+          
+        if ( is_update ) {
+            row.after(el);
+            row.remove();
+        } else table.append(el);
+    }
+
+    function updateMember(key, row) {
+
+        var member = getFormData();
+        addMemberToDOM(true, member, key, row);
+          
+        members_ref.child(key).set(member);
+          $('form input').val('');
+          $('#submit')
+            .unbind()
+            .text('Submit')
+            .on('click', addMember);
+            $('#cancel').hide();
+    }
+
+    function getMember() {
+
+        var row = $(this).parents('tr');
+        var key = row.data('key');
+        var member_ref = members_ref.child(key);
+        var submit = $('#submit');
+          
+        member_ref.once('value')
+          .then(function(member) {
+            member = member.val();
+            
+            $('#lot').val(member.lot);
+            $('#name').val(member.name);
+            $('#datePayment').val(member.datePayment);
+            $('#payment_type').val(member.payment_type);
+            $('#rent').val(member.rent); 
+            $('#water').val(member.water);         
+            $('#storage').val(member.storage);
+            $('#other').val(member.other);
+            submit.text('Update');
+            submit.unbind().on('click', function(e) {
+              e.preventDefault();
+              
+              updateMember(key, row);
+            });
+        });
+      
+      $('#cancel')
+        .unbind()
+        .show()
+        .on('click', function(e) {
+          e.preventDefault();
+          $('form input').val('');
+          $(this).hide();
+          submit.text('Submit');
+          submit.unbind().on('click', addMember);
+        });
+    }
+
+
+    function deleteMember() {
+
+        var row = $(this).parents('tr');
+        var key = row.data('key');
+
+        if (confirm("Do you want to delete")){
+            row.remove();
+            members_ref.child(key).remove();
+        }
+    }
+
+
+    function SearchFs() {
+
+        var search=document.getElementById('search').value;
+        members_ref.on('child_added', (member)=> {
+        var key = member.key;
+        member =member.val();
+        console.log(search);
+        if(member.name.toLowerCase().indexOf(search) != -1){
+            console.log(member);
+            table.empty();
+        addMemberToDOM(false, member, key);
+        }
+
+    });
+    }
+
+
+    function getMembers() { 
+
+        members_ref.on('child_added', function(member) {
+        var key = member.key;
+        member = member.val();
+        
+        addMemberToDOM(false, member, key);
+      });
+    }
+
+
+    function init() {
+        getMembers();
+      
+        $("#submit").on("click", addMember);
+        table.on('click', 'button.update', getMember);
+        table.on('click', 'button.delete', deleteMember);
+    }
+
+init();
+
+</script>

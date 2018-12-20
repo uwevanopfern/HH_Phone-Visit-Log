@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Manage Person</title>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+	<script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-messaging.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase-functions.js"></script>
+	<script>
+	  // Initialize Firebase
+	  var config = {
+	    apiKey: "AIzaSyB81gNhYUOO0m_6ZQHJ6XzOkN-ZMLv9lGk",
+	    authDomain: "hh-phone-visit-log.firebaseapp.com",
+	    databaseURL: "https://hh-phone-visit-log.firebaseio.com",
+	    projectId: "hh-phone-visit-log",
+	    storageBucket: "hh-phone-visit-log.appspot.com",
+	    messagingSenderId: "464712442656"
+	  };
+	  firebase.initializeApp(config);
+	</script>
+</head>
+
+<body>
+
+	<div class="container">
+        <br>
+        <h1>Enter person</h1> 
+        <div class="row">
+            <div class="col-md-6">
+                <form>
+                	<input type="hidden" id="id_Person" class="form-control form-control-sm"><br>
+                	<input type="hidden" id="id_GlobalPerson" class="form-control form-control-sm"><br>
+                    fistName : <input type="text" id="fistName" class="form-control form-control-sm" placeholder="Enter fistName"><br>
+                    lastName : <input type="text" id="lastName" class="form-control form-control-sm" placeholder="Enter lastName"><br>
+                    phone : <input type="text" id="phone" class="form-control form-control-sm" placeholder="Enter phone"><br>
+                    address : <input type="text" id="address" class="form-control form-control-sm" placeholder="Enter address"><br>
+                    <button class="btn btn-default" type="submit" id="submit">Submit</button>
+                    <button id="cancel" class="btn grey darken-1 white-text">Cancel</button>
+                </form>
+            </div>
+            <div class="col-md-6">
+	            <h3>Search bellow</h3>
+	            <form>
+	                <input type="text" id="search" class="form-control" placeholder="Enter by person"><br>
+	                <button type="button" onclick="SearchFs()" class="btn btn-default">search</button><br><br>
+	                <a href="javascript:location.reload(true)" class="btn btn-success">Refresh this page</a>
+	            </form>
+	            <br>
+	            <table class="table table-striped custab" id="tbl_users_list">
+	                <thead>
+	                    <tr>
+	                        <th>Firstname</th>
+	                        <th>Lastname</th>
+	                        <th>Phone</th>
+	                        <th>Address</th>
+	                        <th class="text-center">Action</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                </tbody>
+	            </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+	
+	var db = firebase.database();
+    var members_ref = db.ref('Person/');
+    var table = $('table tbody');
+
+    // var id_person = members_ref.child('Person');   
+    // var UUIDGlobalPerson = id_global_person.push().key;   
+
+
+    function getFormData() {
+
+        var fistName = $('#fistName').val();
+        var lastName = $('#lastName').val();
+        var phone = $('#phone').val();
+        var address = $('#address').val();
+          
+        return {
+            fistName: fistName,
+            lastName: lastName,
+            phone: phone,
+            address: address,
+        };
+    }
+
+    function addMember(event) {
+
+        event.preventDefault();
+        // var member = getFormData();
+          
+        // members_ref.push(member);
+        var id_Person=members_ref.push().key;
+        var id_global_Person=members_ref.push().push().key;
+
+        members_ref.child(id_Person).set({
+		    id_Person: id_Person,
+        	id_GlobalPerson: id_global_Person,
+            fistName: $('#fistName').val(),
+            lastName: $('#lastName').val(),
+            phone: $('#phone').val(),
+            address: $('#address').val(),
+		});
+        $('form input').val('');
+    }
+
+    function addMemberToDOM(is_update, member, key, row) {
+        var el = 
+            '<tr data-key="' + key + '">' +
+              '<td>' + member.fistName + '</td>' +
+              '<td>' + member.lastName + '</td>' + 
+              '<td>' + member.phone + '</td>' +
+              '<td>' + member.address + '</td>' +
+              '<td>' +
+                '<button class="btn btn-sm update">Update</button></br>' +
+                '<button class="btn btn-sm grey darken-1 delete" onclick="deleteItem(#ITEMID,#ITEMNAME)">Delete</button>' +
+              '</td>' +
+            '</tr>';
+          
+        if ( is_update ) {
+            row.after(el);
+            row.remove();
+        } else table.append(el);
+    }
+
+    function updateMember(key, row) {
+
+        var member = getFormData();
+        addMemberToDOM(true, member, key, row);
+          
+        members_ref.child(key).set(member);
+          $('form input').val('');
+          $('#submit')
+            .unbind()
+            .text('Submit')
+            .on('click', addMember);
+            $('#cancel').hide();
+    }
+
+    function getMember() {
+
+        var row = $(this).parents('tr');
+        var key = row.data('key');
+        var member_ref = members_ref.child(key);
+        var submit = $('#submit');
+          
+        member_ref.once('value')
+          .then(function(member) {
+            member = member.val();
+            
+            $('#fistName').val(member.fistName);
+            $('#lastName').val(member.lastName);
+            $('#phone').val(member.phone);
+            $('#address').val(member.address);           
+            submit.text('Update');
+            submit.unbind().on('click', function(e) {
+              e.preventDefault();
+              
+              updateMember(key, row);
+            });
+        });
+      
+      $('#cancel')
+        .unbind()
+        .show()
+        .on('click', function(e) {
+          e.preventDefault();
+          $('form input').val('');
+          $(this).hide();
+          submit.text('Submit');
+          submit.unbind().on('click', addMember);
+        });
+    }
+
+
+    function deleteMember() {
+
+        var row = $(this).parents('tr');
+        var key = row.data('key');
+
+        if (confirm("Do you want to delete")){
+            row.remove();
+            members_ref.child(key).remove();
+        }
+    }
+
+
+    function SearchFs() {
+
+        var search=document.getElementById('search').value;
+        members_ref.on('child_added', (member)=> {
+        var key = member.key;
+        member =member.val();
+        console.log(search);
+        if(member.fistName.toLowerCase().indexOf(search) != -1){
+            console.log(member);
+            table.empty();
+        addMemberToDOM(false, member, key);
+        }
+
+    });
+    }
+
+
+    function getMembers() { 
+
+        members_ref.on('child_added', function(member) {
+        var key = member.key;
+        member = member.val();
+        
+        addMemberToDOM(false, member, key);
+      });
+    }
+
+
+    function init() {
+        getMembers();
+      
+        $("#submit").on("click", addMember);
+        table.on('click', 'button.update', getMember);
+        table.on('click', 'button.delete', deleteMember);
+    }
+
+init();
+
+</script>
