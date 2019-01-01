@@ -39,7 +39,15 @@
                         <option class="form-control form-control-sm">Missed Call</option>
                         <option class="form-control form-control-sm">Missed Visitor</option>
                     </select>
-                    messageFor : <input type="text" id="messageFor" class="form-control form-control-sm" placeholder="Enter message person"><br>
+                    messageFor :<select class="form-control form-control-sm" id="messageFor">
+                        <option class="form-control form-control-sm">Sales</option>
+                        <option class="form-control form-control-sm">Tom</option>
+                        <option class="form-control form-control-sm">Ginny</option>
+                        <option class="form-control form-control-sm">Julie</option>
+                        <option class="form-control form-control-sm">Cindy</option>
+                        <option class="form-control form-control-sm">Brittany</option>
+                        <option class="form-control form-control-sm">Other</option>
+                    </select>
                     timeDateOfOccurrence : <input type="date" id="timeDateOfOccurrence" class="form-control form-control-sm"><br>
                     Select Person :<select class="form-control form-control-sm" id="person">
                         <option class="form-control form-control-sm"></option>
@@ -54,9 +62,10 @@
             <div class="col-md-9">
 	            <h3>Search bellow</h3>
 	            <form>
-	                <input type="text" id="search" class="form-control" placeholder="Enter by staff"><br>
+	                <input type="text" id="search" class="form-control" placeholder="Search by message"><br>
 	                <button type="button" onclick="SearchFs()" class="btn btn-default">search</button><br><br>
 	                <a href="javascript:location.reload(true)" class="btn btn-success">Refresh this page</a>
+                    <a href="person.html" class="btn btn-info">ADD NEW PERSON</a>
 	            </form>
 	            <br>
 	            <table class="table table-striped custab" id="tbl_users_list">
@@ -133,6 +142,7 @@
     }
 
     function addMemberToDOM(is_update, member, key, row) {
+
         var el = 
             '<tr data-key="' + key + '">' +
               '<td>' + member.types + '</td>' + 
@@ -226,7 +236,7 @@
         var key = member.key;
         member =member.val();
         console.log(search);
-        if(member.messageFor.toLowerCase().indexOf(search) != -1){
+        if(member.message.toLowerCase().indexOf(search) != -1){
             console.log(member);
             table.empty();
         addMemberToDOM(false, member, key);
