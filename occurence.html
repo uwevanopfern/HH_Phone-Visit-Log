@@ -67,7 +67,20 @@
                         <option class="form-control form-control-sm"></option>
                     </select>
                     <br>
-                    <button type="button" onclick="Filter()" class="btn btn-default">Filter Here</button><br><br>
+                    <button type="button" onclick="Filter()" class="btn btn-default">Filter by person</button><br><br>
+                    <br>
+
+                    Filter by staff :<select class="form-control form-control-sm" id="filter_by_staff">
+                       <option class="form-control form-control-sm">Sales</option>
+                        <option class="form-control form-control-sm">Tom</option>
+                        <option class="form-control form-control-sm">Ginny</option>
+                        <option class="form-control form-control-sm">Julie</option>
+                        <option class="form-control form-control-sm">Cindy</option>
+                        <option class="form-control form-control-sm">Brittany</option>
+                        <option class="form-control form-control-sm">Other</option>
+                    </select>
+                    <br>
+                    <button type="button" onclick="Filter_Staff()" class="btn btn-default">Filter by staff</button><br><br>
                     <br>
 	                <a href="occurence.html" class="btn btn-success" id="refresh">Refresh this page</a>
                     <a href="person.html" class="btn btn-info">ADD NEW PERSON</a>
@@ -262,6 +275,24 @@
             member =member.val();
             console.log(search);
             if(member.person.indexOf(search) != -1){
+                console.log(member);
+                
+            addMemberToDOM(false, member, key);
+            }
+        });
+    }
+
+
+    function Filter_Staff() {
+
+        table.empty();
+
+        var search=document.getElementById('filter_by_staff').value;
+        members_ref.orderByChild("timeDateStampCreation").limitToFirst(5).on('child_added', (member)=> {
+            var key = member.key;
+            member =member.val();
+            console.log(search);
+            if(member.messageFor.indexOf(search) != -1){
                 console.log(member);
                 
             addMemberToDOM(false, member, key);
